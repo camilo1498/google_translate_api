@@ -95,7 +95,7 @@ module.exports = (from ,to ,text ,callback) => {
 				translated.text = content[7][1];
 			}else{
 				translated.text = content[0][0][0];
-				translated.originalText = content[0][0][1];
+				translated.originalText = content[0][0];
 				
 				translated.translationLanguage = to;
 
