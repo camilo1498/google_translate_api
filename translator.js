@@ -119,7 +119,7 @@ module.exports = (from ,to ,text ,callback) => {
 								word: translations[0],
 								translations: translations[1],
 								article: translations[4],
-								freciency: translations[3]
+								frequency: translations[3]
 							}
 							type.translations.push(define);
 						});
