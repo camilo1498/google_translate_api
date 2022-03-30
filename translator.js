@@ -155,7 +155,7 @@ module.exports = (from ,to ,text ,callback) => {
 						synonyms[1].forEach(one => {
 							define.push({
 								id:one[1],
-								synonyms: one[0]
+								words: one[0]
 							});
 						})
 						translated.source.synonyms.push(define);
