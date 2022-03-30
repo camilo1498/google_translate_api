@@ -99,6 +99,7 @@ module.exports = (from ,to ,text ,callback) => {
 				
 				translated.translationLanguage = to;
 
+				// source lang code
 				if(content[8]!=null && content[8][0] != null){
 					if(content[8][0].length > 0){
 						content[8][0].forEach(sourceLang => {
@@ -114,37 +115,18 @@ module.exports = (from ,to ,text ,callback) => {
 							translations:[],
 						}
 						translation[2].forEach(translations => {
-							type.translations.push([
-								translations[0], // word
-								translations[1], // translations
-								translations[4], // article
-								translations[3]  // frecuency
-							]);
+							var define = {
+								word: translations[0],
+								translations: translations[1],
+								article: translations[4],
+								freciency: translations[3]
+							}
+							type.translations.push(define);
 						});
 						translated.translations.push(type);
 						
 					});
 				}
-
-				
-				//source synonyms
-				if(content[11]!=null && content[11][0]!=null && content[11][0][1]!=null){
-					if(content[11][0][1].length > 0){
-						content[11][0][1].forEach(synonyms => {
-							translated.source.synonyms.push(synonyms[0]);
-						});
-					}
-				}				
-				
-				//pronunciation
-				if(content[0][1]!=null){
-					content[0][1].forEach(pronunciation => {
-						if(pronunciation != null){
-							translated.source.pronunciation.push(pronunciation);
-						}
-					});
-				}
-				
 
 				//definitions
 				if(content[12]!=null){
@@ -156,6 +138,7 @@ module.exports = (from ,to ,text ,callback) => {
 						};
 						definitions[1].forEach(one => {
 							define.definitions.push({
+								id: one[1],
 								definition:one[0],
 								example:one[2]
 							});
@@ -164,6 +147,34 @@ module.exports = (from ,to ,text ,callback) => {
 						
 					});
 				}
+
+				//source synonyms
+				if(content[11] != null){
+					content[11].forEach(synonyms => {
+						var define = {
+							type: synonyms[0],
+							content: []
+						};
+						synonyms[1].forEach(one => {
+							define.content.push({
+								id:one[1],
+								synonyms: one[0]
+							});
+						})
+						translated.source.synonyms.push(define);
+					});
+				}
+				
+				
+				//pronunciation
+				if(content[0][1]!=null){
+					content[0][1].forEach(pronunciation => {
+						if(pronunciation != null){
+							translated.source.pronunciation.push(pronunciation);
+						}
+					});
+				}
+				
 
 
 				//examples
