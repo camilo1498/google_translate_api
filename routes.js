@@ -5,7 +5,7 @@ module.exports = (app) => {
         try{
             console.log('res' + req.query[0]);
             translator(req.query.from , req.query.to , req.query.text, response => {
-                console.log(response);
+                //console.log(response);
                 if(response['isCorrect'] == true){
                     return res.status(201).json({
                         success: true,

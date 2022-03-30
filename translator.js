@@ -148,15 +148,12 @@ module.exports = (from ,to ,text ,callback) => {
 					});
 				}
 
-				//source synonyms
+				//source synonyms => put inside of definitions and create a field call "synonyms"
 				if(content[11] != null){
 					content[11].forEach(synonyms => {
-						var define = {
-							type: synonyms[0],
-							content: []
-						};
+						var define = [];
 						synonyms[1].forEach(one => {
-							define.content.push({
+							define.push({
 								id:one[1],
 								synonyms: one[0]
 							});
