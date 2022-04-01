@@ -1,6 +1,6 @@
 # google_translate_api
 
-If you want to test this api try with `https://translate-google-api.herokuapp.com/api/translate` and send the follow params `from, to, text`
+If you want to test this api try with `https://translate-google-api.herokuapp.com/api/translate` and send the following params `from, to, text`
 
 Here yuo can find a demo app made with flutter => [repository](https://github.com/camilo1498/flutter_translate_app)
 
