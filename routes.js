@@ -9,6 +9,7 @@ module.exports = (app) => {
                 if(response['isCorrect'] == true){
                     return res.status(201).json({
                         success: true,
+                        message: 'ok',
                         data: response
                     });
                 } else{
@@ -26,7 +27,8 @@ module.exports = (app) => {
         } catch(err){
             return res.status(501).json({
                 success: false,
-                message: err['message']
+                message: err['message'],
+                data:{}
             });
         }
     });
