@@ -9,16 +9,17 @@ module.exports = (app) => {
                 if(response['isCorrect'] == true){
                     return res.status(201).json({
                         success: true,
-                        message: 'ok',
+                        message: 'success',
                         data: response
                     });
                 } else{
                     translator(req.query.from , req.query.to , req.query.text, didYouMean =>{		
                         if(response.isCorrect==false){
-                            console.log('did you mean : %s ?',didYouMean.text);
+                            console.log('did you mean : %s ?',didYouMean.correctionSourceText);
                             return res.status(201).json({
                                 success: true,
-                                data: didYouMean
+                                data: didYouMean,
+                                message: 'success'
                             });
                         }
                     });
@@ -28,7 +29,7 @@ module.exports = (app) => {
             return res.status(501).json({
                 success: false,
                 message: err['message'],
-                data:{}
+                data: {}
             });
         }
     });

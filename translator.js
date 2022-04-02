@@ -77,8 +77,8 @@ module.exports = (from ,to ,text ,callback) => {
 			var translated = {
 				text:'',
 				originalText:'',
-				correctionSourceText: '',
 				sourceLanguage:'',
+				correctionSourceText: '',
 				translationLanguage:'',
 				isCorrect:true,
 				source:{
@@ -93,13 +93,11 @@ module.exports = (from ,to ,text ,callback) => {
 
 			if (content[7] != null && content[7].length !== 0){
 				translated.isCorrect = false;
+				translated.correctionSourceText = content[7][1];
 				translated.text = content[0][0][0];
-				translated.correctionSourceText = content[0][0][1];
-				
 			}else{
 				translated.text = content[0][0][0];
 				translated.originalText = content[0][0][1];
-				
 				translated.translationLanguage = to;
 
 				// source lang code
