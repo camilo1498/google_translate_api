@@ -1,4 +1,5 @@
 var translator = require('./translator');
+var supportedLangs = require('./supported_languages');
 module.exports = (app) => {
     
     app.get('/api/translate', function(req, res) {
@@ -32,6 +33,33 @@ module.exports = (app) => {
                 data: {}
             });
         }
+    });
+
+    app.get('/api/supported-langs', async function(req, res) {
+        try {
+            var langList = []
+            Object.entries(supportedLangs.languages).map((key, value) => langList.push({
+                'lang_code': key[0],
+                'lang_name': key[1]
+            }))
+
+            return res.status(200).json({
+                success: true,
+                data: {
+                    'total_count': langList.length,
+                    'date_time': new Date().toISOString().slice(0, 10),
+                    'items': langList
+                }
+            });
+            
+        } catch(err) {
+            return res.status(501).json({
+                success: false,
+                message: err['message'],
+                data: {}
+            });
+        }
+
     });
     
 }
