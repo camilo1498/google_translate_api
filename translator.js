@@ -67,7 +67,6 @@ function v1(from, to, text, callback) {
 	};
 	https.get(options, response => {
 		var content = '';
-		console.log(options);
 		response.on('data', chunk => {
 			content += chunk;
 		});
@@ -253,7 +252,6 @@ function v2(from, to, text, callback) {
 	};
 	https.get(options, response => {
 		var content = '';
-		console.log(options);
 		response.on('data', chunk => {
 			content += chunk;
 
