@@ -1,22 +1,22 @@
 var translator = require('./translator');
 var supportedLangs = require('./supported_languages');
 module.exports = (app) => {
-    
-    app.get('/api/translate', function(req, res) {
-        try{
+
+    app.get('/api/translate/v1', function (req, res) {
+        try {
             console.log('res' + req.query[0]);
-            translator(req.query.from , req.query.to , req.query.text, response => {
+            translator.v1(req.query.from, req.query.to, req.query.text, response => {
                 //console.log(response);
-                if(response['isCorrect'] == true){
+                if (response['isCorrect'] == true) {
                     return res.status(201).json({
                         success: true,
                         message: 'success',
                         data: response
                     });
-                } else{
-                    translator(req.query.from , req.query.to , req.query.text, didYouMean =>{		
-                        if(response.isCorrect==false){
-                            console.log('did you mean : %s ?',didYouMean.correctionSourceText);
+                } else {
+                    translator.v1(req.query.from, req.query.to, req.query.text, didYouMean => {
+                        if (response.isCorrect == false) {
+                            console.log('did you mean : %s ?', didYouMean.correctionSourceText);
                             return res.status(201).json({
                                 success: true,
                                 data: didYouMean,
@@ -25,8 +25,8 @@ module.exports = (app) => {
                         }
                     });
                 }
-            }); 
-        } catch(err){
+            });
+        } catch (err) {
             return res.status(501).json({
                 success: false,
                 message: err['message'],
@@ -35,7 +35,29 @@ module.exports = (app) => {
         }
     });
 
-    app.get('/api/supported-langs', async function(req, res) {
+    app.get('/api/translate/v2', function (req, res) {
+        try {
+            console.log('res' + req.query[0]);
+            translator.v2(req.query.from, req.query.to, req.query.text, response => {
+
+
+                return res.status(201).json({
+                    success: true,
+                    message: 'success',
+                    data: response
+                });
+
+            });
+        } catch (err) {
+            return res.status(501).json({
+                success: false,
+                message: err['message'],
+                data: {}
+            });
+        }
+    });
+
+    app.get('/api/supported-langs', async function (req, res) {
         try {
             var langList = []
             Object.entries(supportedLangs.languages).map((key, value) => langList.push({
@@ -51,8 +73,8 @@ module.exports = (app) => {
                     'items': langList
                 }
             });
-            
-        } catch(err) {
+
+        } catch (err) {
             return res.status(501).json({
                 success: false,
                 message: err['message'],
@@ -61,5 +83,5 @@ module.exports = (app) => {
         }
 
     });
-    
+
 }

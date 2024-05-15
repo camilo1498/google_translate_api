@@ -9,7 +9,7 @@ function Exception(message) {
 	this.message = message;
 }
 
-module.exports = (from, to, text, callback) => {
+function v1(from, to, text, callback) {
 
 	if (from) {
 		from = from.toLowerCase();
@@ -190,4 +190,83 @@ module.exports = (from, to, text, callback) => {
 			callback(translated);
 		});
 	});
+}
+
+
+function v2(from, to, text, callback) {
+
+	if (from) {
+		from = from.toLowerCase();
+	}
+	if (to) {
+		to = to.toLowerCase();
+	}
+
+	var detectlanguage = false;
+
+	if (from == undefined) {
+		detectlanguage = true;
+	} else if (!(from in Languages.languages)) {
+		throw new Exception("Cannot translate from unknown language: " + from);
+	}
+
+	if (to == undefined || !(to in Languages.languages)) {
+		throw new Exception("Cannot translate to unknown language: " + to);
+	}
+
+	if (text == undefined || text.length == 0) {
+		throw new Exception("Cannot translate undefined or empty text string");
+	}
+
+	/*
+	sl => source, 
+	tl => translation language, 
+	dt =>
+		{
+			dt => detection text,
+			q => source text, 
+			bd => dictionary, 
+			ex => examples, 
+			ld => ?, 
+			md => definitions, 
+			qca => ?, 
+			rw => see also<list>, 
+			rm => transcriptions, 
+			ss => sysnonyms, 
+			t => translation/translated text, 
+			at => alternative translations
+		}*/
+
+	text = querystring.escape(text);
+
+	var sl = detectlanguage ? "auto" : from;
+
+	var options = {
+		host: 'translate.googleapis.com',
+		port: 443,
+		path: '/translate_a/single?client=gtx&dj=1&sl=' + from + '&tl=' + to + '&hl=' + to + '&text=' + text + '&dt=md&dt=rw&dt=t&dt=bd&dt=ex&dt=rm&dt=ss&dt=at&dt=dp&dt=mt&dt=rmt&dt=qca&dt=ld&dt=ex&dt=at&op=translate',
+		headers: {
+			'Accept': 'application/json;charset=utf-8',
+			'Accept-Language': 'en-US,en;q=0.5',
+			'Content-Type': 'application/json'
+		}
+	};
+	https.get(options, response => {
+		var content = '';
+		console.log(options);
+		response.on('data', chunk => {
+			content += chunk;
+
+		});
+		response.on('end', () => {
+			var json = JSON.parse(content);
+
+			callback(json);
+		});
+	});
+}
+
+module.exports = {
+	v1,
+	v2,
 }
