@@ -2,7 +2,7 @@ var translator = require('./translator');
 var supportedLangs = require('./supported_languages');
 module.exports = (app) => {
 
-    app.get('/api/translate/v1', function (req, res) {
+    app.get('/api/v1/translate', function (req, res) {
         try {
             console.log('res' + req.query[0]);
             translator.v1(req.query.from, req.query.to, req.query.text, response => {
@@ -35,17 +35,13 @@ module.exports = (app) => {
         }
     });
 
-    app.get('/api/translate/v2', function (req, res) {
+    app.get('/api/v2/translate', async function (req, res) {
         try {
-            console.log('res' + req.query[0]);
-            translator.v2(req.query.from, req.query.to, req.query.text, response => {
+
+            await translator.v2(req.query.from, req.query.to, req.query.text, response => {
 
 
-                return res.status(201).json({
-                    success: true,
-                    message: 'success',
-                    data: response
-                });
+                return res.status(201).json(response);
 
             });
         } catch (err) {

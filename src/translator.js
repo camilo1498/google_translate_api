@@ -1,7 +1,8 @@
 
-var https = require('https');
-var querystring = require('querystring');
-var Languages = require('./supported_languages');
+const https = require('https');
+const querystring = require('querystring');
+const Languages = require('./supported_languages');
+const tokenGenerator = require("./g_token");
 
 
 
@@ -32,6 +33,9 @@ function v1(from, to, text, callback) {
 
 	if (text == undefined || text.length == 0) {
 		throw new Exception("Cannot translate undefined or empty text string");
+	}
+	if (text.length >= 5000) {
+		throw new Exception("Service only can detect less than 5000 characters");
 	}
 
 	/*
@@ -187,12 +191,26 @@ function v1(from, to, text, callback) {
 				}
 			}
 			callback(translated);
+			try {
+				var json = JSON.parse(content);
+				callback({
+					success: true,
+					message: 'success',
+					data: json,
+				});
+			} catch (e) {
+				callback({
+					success: false,
+					message: 'Unhandler error',
+					data: {}
+				});
+			}
 		});
 	});
 }
 
 
-function v2(from, to, text, callback) {
+async function v2(from, to, text, callback) {
 
 	if (from) {
 		from = from.toLowerCase();
@@ -207,49 +225,63 @@ function v2(from, to, text, callback) {
 		detectlanguage = true;
 	} else if (!(from in Languages.languages)) {
 		throw new Exception("Cannot translate from unknown language: " + from);
+
+	}
+	if (text == undefined || text.length == 0) {
+		throw new Exception("Cannot translate undefined or empty text string");
 	}
 
 	if (to == undefined || !(to in Languages.languages)) {
 		throw new Exception("Cannot translate to unknown language: " + to);
 	}
 
-	if (text == undefined || text.length == 0) {
-		throw new Exception("Cannot translate undefined or empty text string");
+	if (text.length >= 5000) {
+		throw new Exception("Service only can detect less than 5000 characters");
 	}
 
-	/*
-	sl => source, 
-	tl => translation language, 
-	dt =>
-		{
-			dt => detection text,
-			q => source text, 
-			bd => dictionary, 
-			ex => examples, 
-			ld => ?, 
-			md => definitions, 
-			qca => ?, 
-			rw => see also<list>, 
-			rm => transcriptions, 
-			ss => sysnonyms, 
-			t => translation/translated text, 
-			at => alternative translations
-		}*/
 
 	text = querystring.escape(text);
 
-	var sl = detectlanguage ? "auto" : from;
+
+	let sl = detectlanguage ? "auto" : from;
+	// Generate Google Translate token for the text to be translated.
+	let token = await tokenGenerator.generate(text);
+
+	const data = {
+		dj: 1,
+		client: "gtx",
+		ie: "UTF-8",
+		oe: "UTF-8",
+		multires: 1,
+		sl: sl,
+		tl: to,
+		hl: to,
+		dt: ["md", "rw", "t", "bd", "ex", "rm", "ss", "at", "dp", "mt", "rtm", "qca", "ld", ""],
+		ie: "UTF-8",
+		oe: "UTF-8",
+		otf: 1,
+		ssel: 0,
+		tsel: 0,
+		kc: 7,
+		text: text,
+		op: "translate",
+		[token.name]: token.value
+	};
+
+	let path = `/translate_a/single?${querystring.stringify(data)}`;
+
 
 	var options = {
 		host: 'translate.googleapis.com',
 		port: 443,
-		path: '/translate_a/single?client=gtx&dj=1&sl=' + from + '&tl=' + to + '&hl=' + to + '&text=' + text + '&dt=md&dt=rw&dt=t&dt=bd&dt=ex&dt=rm&dt=ss&dt=at&dt=dp&dt=mt&dt=rmt&dt=qca&dt=ld&dt=ex&dt=at&op=translate',
+		path: path,
 		headers: {
 			'Accept': 'application/json;charset=utf-8',
 			'Accept-Language': 'en-US,en;q=0.5',
-			'Content-Type': 'application/json'
+			'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
 		}
 	};
+
 	https.get(options, response => {
 		var content = '';
 		response.on('data', chunk => {
@@ -257,11 +289,29 @@ function v2(from, to, text, callback) {
 
 		});
 		response.on('end', () => {
-			var json = JSON.parse(content);
 
-			callback(json);
+			try {
+				var json = JSON.parse(content);
+				callback({
+					success: true,
+					message: 'success',
+					data: json,
+				});
+			} catch (e) {
+				callback({
+					success: false,
+					message: 'Unhandler error',
+					data: {}
+				});
+			}
+
+
 		});
 	});
+
+
+
+
 }
 
 module.exports = {

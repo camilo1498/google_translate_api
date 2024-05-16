@@ -4,7 +4,7 @@ const http = require('http');
 const server = http.createServer(app);
 
 const port = process.env.PORT || 3000;
-const routes = require('./routes');
+const routes = require('./src/routes');
 
 routes(app);
 
