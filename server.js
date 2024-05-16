@@ -4,10 +4,10 @@ const http = require('http');
 const server = http.createServer(app);
 
 const port = process.env.PORT || 3000;
-const routes = require('./src/routes');
+const routes = require('./src/routes/routes');
 
 routes(app);
 
-server.listen(port, function() {
+server.listen(port, function () {
     console.log('Aplicacion de NodeJS ' + port + ' Iniciada...');
 });

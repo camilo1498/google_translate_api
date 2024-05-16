@@ -1,9 +1,9 @@
 
 const https = require('https');
 const querystring = require('querystring');
-const Languages = require('./supported_languages');
-const tokenGenerator = require("./g_token");
-
+const Languages = require('../utils/supported_languages');
+const tokenGenerator = require("../utils/g_token");
+const { TranslatorResponseModel } = require("../models/translator_response_model");
 
 
 function Exception(message) {
@@ -247,7 +247,7 @@ async function v2(from, to, text, callback) {
 	// Generate Google Translate token for the text to be translated.
 	let token = await tokenGenerator.generate(text);
 
-	const data = {
+	const body = {
 		dj: 1,
 		client: "gtx",
 		ie: "UTF-8",
@@ -268,8 +268,8 @@ async function v2(from, to, text, callback) {
 		[token.name]: token.value
 	};
 
-	let path = `/translate_a/single?${querystring.stringify(data)}`;
 
+	let path = `/translate_a/single?${querystring.stringify(body)}`;
 
 	var options = {
 		host: 'translate.googleapis.com',
@@ -292,10 +292,13 @@ async function v2(from, to, text, callback) {
 
 			try {
 				var json = JSON.parse(content);
+
+				let model = new TranslatorResponseModel(json);
+				console.log(model.data.sentences);
 				callback({
 					success: true,
 					message: 'success',
-					data: json,
+					data: model.data,
 				});
 			} catch (e) {
 				callback({
@@ -317,4 +320,18 @@ async function v2(from, to, text, callback) {
 module.exports = {
 	v1,
 	v2,
+}
+
+class TranslationResponseModel {
+	constructor(height, width) {
+		this.height = height;
+		this.width = width;
+	}
+
+}
+
+
+
+class Sentences {
+
 }

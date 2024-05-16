@@ -1,5 +1,5 @@
-var translator = require('./translator');
-var supportedLangs = require('./supported_languages');
+var translator = require('../api_controller/translator');
+var supportedLangs = require('../utils/supported_languages');
 module.exports = (app) => {
 
     app.get('/api/v1/translate', function (req, res) {
