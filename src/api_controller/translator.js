@@ -4,7 +4,7 @@ const querystring = require('querystring');
 const Languages = require('../utils/supported_languages');
 const tokenGenerator = require("../utils/g_token");
 const { TranslatorResponseModel } = require("../models/translator_response_model");
-
+const { TranslationUtils } = require('../utils/translation_utils');
 
 function Exception(message) {
 	this.message = message;
@@ -37,25 +37,6 @@ function v1(from, to, text, callback) {
 	if (text.length >= 5000) {
 		throw new Exception("Service only can detect less than 5000 characters");
 	}
-
-	/*
-	sl => source, 
-	tl => translation language, 
-	dt =>
-		{
-			dt => detection text,
-			q => source text, 
-			bd => dictionary, 
-			ex => examples, 
-			ld => ?, 
-			md => definitions, 
-			qca => ?, 
-			rw => see also<list>, 
-			rm => transcriptions, 
-			ss => sysnonyms, 
-			t => translation/translated text, 
-			at => alternative translations
-		}*/
 
 	text = querystring.escape(text);
 
@@ -239,24 +220,22 @@ async function v2(from, to, text, callback) {
 		throw new Exception("Service only can detect less than 5000 characters");
 	}
 
-
-	text = querystring.escape(text);
-
-
+	// source language
 	let sl = detectlanguage ? "auto" : from;
-	// Generate Google Translate token for the text to be translated.
-	let token = await tokenGenerator.generate(text);
 
+	// Generate Google Translate token for the text to be translated.
+	let tokeng = await tokenGenerator.get(text);
+
+	// query params
 	const body = {
-		dj: 1,
 		client: "gtx",
 		ie: "UTF-8",
 		oe: "UTF-8",
-		multires: 1,
+		dj: 1,
 		sl: sl,
 		tl: to,
 		hl: to,
-		dt: ["md", "rw", "t", "bd", "ex", "rm", "ss", "at", "dp", "mt", "rtm", "qca", "ld", ""],
+		dt: ["md", "rw", "t", "bd", "ex", "rm", "ss", "at", "dp", "mt", "rtm", "qca", "ld"],
 		ie: "UTF-8",
 		oe: "UTF-8",
 		otf: 1,
@@ -265,9 +244,8 @@ async function v2(from, to, text, callback) {
 		kc: 7,
 		text: text,
 		op: "translate",
-		[token.name]: token.value
+		[tokeng.name]: tokeng.value
 	};
-
 
 	let path = `/translate_a/single?${querystring.stringify(body)}`;
 
@@ -278,7 +256,8 @@ async function v2(from, to, text, callback) {
 		headers: {
 			'Accept': 'application/json;charset=utf-8',
 			'Accept-Language': 'en-US,en;q=0.5',
-			'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+			'Content-Type': 'application/json',
+			'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.104 Safari/537.36'
 		}
 	};
 
@@ -291,14 +270,32 @@ async function v2(from, to, text, callback) {
 		response.on('end', () => {
 
 			try {
+				// parse response data
 				var json = JSON.parse(content);
 
+				/// set data model
 				let model = new TranslatorResponseModel(json);
-				console.log(model.data.sentences);
+
+				// new model response
+				let formatModel = {
+					sentences: model.data.sentences,
+					translate_src: to,
+					src_lang: model.data.src || undefined,
+					detected_lang: model.data.ld_result.srclangs[0] || undefined,
+					spell: model.data.spell,
+					synsets: model.data.synsets,
+					dict: model.data.dict,
+					alternative_translations: model.data.alternative_translations,
+					definitions: model.data.definitions,
+					examples: model.data.examples,
+					related_words: model.data.relatedWords,
+					confidence: model.data.confidence,
+				};
+
 				callback({
 					success: true,
 					message: 'success',
-					data: model.data,
+					data: formatModel,
 				});
 			} catch (e) {
 				callback({
@@ -320,18 +317,4 @@ async function v2(from, to, text, callback) {
 module.exports = {
 	v1,
 	v2,
-}
-
-class TranslationResponseModel {
-	constructor(height, width) {
-		this.height = height;
-		this.width = width;
-	}
-
-}
-
-
-
-class Sentences {
-
 }

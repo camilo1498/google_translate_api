@@ -4,9 +4,8 @@ module.exports = (app) => {
 
     app.get('/api/v1/translate', function (req, res) {
         try {
-            console.log('res' + req.query[0]);
             translator.v1(req.query.from, req.query.to, req.query.text, response => {
-                //console.log(response);
+        
                 if (response['isCorrect'] == true) {
                     return res.status(201).json({
                         success: true,
@@ -16,7 +15,6 @@ module.exports = (app) => {
                 } else {
                     translator.v1(req.query.from, req.query.to, req.query.text, didYouMean => {
                         if (response.isCorrect == false) {
-                            console.log('did you mean : %s ?', didYouMean.correctionSourceText);
                             return res.status(201).json({
                                 success: true,
                                 data: didYouMean,
@@ -37,14 +35,14 @@ module.exports = (app) => {
 
     app.get('/api/v2/translate', async function (req, res) {
         try {
-
+            // get response
             await translator.v2(req.query.from, req.query.to, req.query.text, response => {
-
-
+                // send response
                 return res.status(201).json(response);
 
             });
         } catch (err) {
+            // error response
             return res.status(501).json({
                 success: false,
                 message: err['message'],

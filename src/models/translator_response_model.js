@@ -1,7 +1,9 @@
+const { TranslationUtils } = require('../utils/translation_utils');
+
 class TranslatorResponseModel {
     constructor(data) {
 
-        this.data = new Data(
+        this.data = new TranslatorResponseModelData(
             data["sentences"],
             data["dict"],
             data["src"],
@@ -12,6 +14,7 @@ class TranslatorResponseModel {
             data["synsets"],
             data["definitions"],
             data["examples"],
+            data["related_words"],
         );
     }
 }
@@ -30,7 +33,7 @@ class Entry {
     constructor(word, reverse_translation, score, previous_word) {
         this.word = word || undefined;
         this.reverse_translation = reverse_translation || undefined;
-        this.score = score || undefined;
+        this.score = score || 0;
         this.previous_word = previous_word || undefined;
     }
 }
@@ -67,11 +70,9 @@ class AlternativeTranslation {
 }
 
 class Spell {
-    constructor(spell_html_res, spell_res, correction_type, confident) {
-        this.spell_html_res = spell_html_res || undefined;
-        this.spell_res = spell_res || undefined;
-        this.correction_type = correction_type || undefined;
-        this.confident = confident || undefined;
+    constructor(higlight_words, correct_trans) {
+        this.higlight_words = higlight_words || undefined;
+        this.correct_trans = correct_trans || undefined;
     }
 }
 
@@ -125,7 +126,8 @@ class Definition {
 }
 
 class Example {
-    constructor(text, definition_id) {
+    constructor(higlight_words, text, definition_id) {
+        this.higlight_words = higlight_words || undefined;
         this.text = text || undefined;
         this.definition_id = definition_id || undefined;
     }
@@ -133,23 +135,48 @@ class Example {
 
 class Examples {
     constructor(example) {
-        this.example = example ? example.map(e => new Example(e["text"], e["definition_id"])) : undefined;
+        this.example = example ? example.map(e => {
+            return new Example(
+                TranslationUtils.parseHtmlWords(e["text"]),
+                TranslationUtils.removeHtmlTags(e["text"]),
+                e["definition_id"]
+            );
+        }) : undefined;
     }
 }
 
-class Data {
-    constructor(sentences, dict, src, alternative_translations, confidence, spell, ld_result, synsets, definitions, examples) {
+class RelatedWord {
+    constructor(word) {
+        this.word = word || undefined;
+    }
+}
 
-        this.sentences = sentences ? sentences.map(s => new Sentence(s["trans"], s["orig"], s["backend"], s["translit"], s["src_translit"])) : undefined;
+class TranslatorResponseModelData {
+    constructor(sentences, dict, src, alternative_translations, confidence, spell, ld_result, synsets, definitions, examples, relatedWords) {
+
+        this.sentences = sentences
+            ? {
+                trans: sentences[0]['trans'],
+                orig: sentences[0]['orig'],
+                translit: sentences[1]?.['translit'] || undefined,
+                src_translit: sentences[1]?.['src_translit'] || undefined
+            }
+            : undefined;
         this.dict = dict ? dict.map(d => new Dict(d["pos"], d["terms"], d["entry"], d["base_form"], d["pos_enum"])) : undefined;
         this.src = src || undefined;
         this.alternative_translations = alternative_translations ? alternative_translations.map(at => new AlternativeTranslation(at["src_phrase"], at["alternative"], at["srcunicodeoffsets"], at["raw_src_segment"], at["start_pos"], at["end_pos"])) : undefined;
         this.confidence = confidence || undefined;
-        this.spell = spell ? new Spell(spell["spell_html_res"], spell["spell_res"], spell["correction_type"], spell["confident"]) : undefined;
+        this.spell = spell
+            ? new Spell(
+                TranslationUtils.parseHtmlWords(spell["spell_html_res"]),
+                spell["spell_res"]
+            )
+            : undefined;
         this.ld_result = ld_result ? new LdResult(ld_result["srclangs"], ld_result["srclangs_confidences"], ld_result["extended_srclangs"]) : undefined;
         this.synsets = synsets ? synsets.map(s => new Synset(s["pos"], s["entry"], s["base_form"], s["pos_enum"])) : undefined;
         this.definitions = definitions ? definitions.map(d => new Definition(d["pos"], d["entry"], d["base_form"], d["pos_enum"])) : undefined;
         this.examples = examples ? new Examples(examples["example"]) : undefined;
+        this.relatedWords = relatedWords ? new RelatedWord(relatedWords["word"]) : undefined;
     }
 }
 
@@ -157,4 +184,5 @@ class Data {
 
 module.exports = {
     TranslatorResponseModel,
+
 }
